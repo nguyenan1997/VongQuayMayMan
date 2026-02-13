@@ -391,8 +391,9 @@ const showFireworks = () => {
               class="group relative w-full flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400 text-red-950 py-4 lg:py-5 rounded-2xl font-black text-xl lg:text-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:shadow-[0_0_60px_rgba(234,179,8,0.5)]"
             >
               <Play class="w-6 h-6 lg:w-7 lg:h-7 fill-red-900" />
-              <span v-if="spinsLeft > 0">{{ isSpinning ? 'HÁI LỘC XUÂN...' : 'QUAY NGAY' }}</span>
-              <span v-else>BẠN ĐÃ HẾT LƯỢT QUAY</span>
+              <span v-if="isSpinning">ĐANG HÁI LỘC...</span>
+              <span v-else-if="spinsLeft > 0">QUAY NGAY</span>
+              <span v-else>HẾT LƯỢT QUAY HÔM NAY</span>
               <div class="absolute -inset-1 bg-yellow-400/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </button>
             
