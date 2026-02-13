@@ -2,6 +2,7 @@
 import { HelpCircle, Trophy, Play, Star, Sparkles, Coins } from 'lucide-vue-next'
 import { ref, onMounted, computed } from 'vue'
 import Auth from './components/Auth.vue'
+import Admin from './components/Admin.vue'
 import { API_ENDPOINTS } from './configs/api'
 
 onMounted(() => {
@@ -20,6 +21,8 @@ const spinsLeft = ref(0)
 const MAX_SPINS = 1
 const lastSpinDate = ref('')
 const leaderboard = ref([])
+const isAdmin = ref(false)
+const isAdminView = ref(false)
 
 // Xử lý dữ liệu bảng xếp hạng: Lọc người chưa quay, trim khoảng trắng và sắp xếp mới nhất lên đầu
 const sortedLeaderboard = computed(() => {
@@ -51,6 +54,10 @@ const checkAuth = async () => {
       const user = result.data
       userName.value = user.fullName
       userToken.value = token
+      isAdmin.value = user.role === 'admin'
+      if (isAdmin.value) {
+        isAdminView.value = true
+      }
       console.log("CheckAuth - User data:", user)
       
       // Logic chuẩn theo API của bạn:
@@ -295,11 +302,15 @@ const showFireworks = () => {
 <template>
   <div class="selection:bg-yellow-500/30">
     <canvas id="fireworks-canvas" class="fixed inset-0 pointer-events-none z-[150]"></canvas>
-    <!-- Auth Screen (Login/Register) -->
-    <Auth v-if="!hasStarted" @auth-success="onAuthSuccess" />
+    
+    <!-- Admin Screen -->
+    <Admin v-if="isAdminView" :token="userToken" :is-admin-role="isAdmin" @back="isAdminView = false" @logout="logout" />
 
-    <!-- Main Game Content -->
-    <template v-if="hasStarted">
+    <!-- Auth Screen (Login/Register) -->
+    <Auth v-else-if="!hasStarted" @auth-success="onAuthSuccess" />
+
+    <!-- Main Game Content (Chỉ dành cho người chơi, không phải Admin) -->
+    <template v-else-if="hasStarted && !isAdminView && !isAdmin">
       <!-- Navigation -->
       <nav class="flex items-center justify-between px-4 sm:px-12 py-6 backdrop-blur-md bg-red-950/10 sticky top-0 z-50">
         <div class="flex items-center gap-3 group cursor-pointer">
@@ -317,6 +328,13 @@ const showFireworks = () => {
             <span class="text-xs font-black text-yellow-500/60 uppercase">Người chơi:</span>
             <span class="text-sm font-black text-yellow-400 uppercase tracking-wider">{{ userName }}</span>
           </div>
+          <button 
+            v-if="isAdmin"
+            @click="isAdminView = true"
+            class="bg-yellow-500/10 hover:bg-yellow-500/20 px-6 py-2.5 rounded-lg text-sm font-black text-yellow-500 border border-yellow-500/30 transition-all active:scale-95 uppercase"
+          >
+            Quản Trị
+          </button>
           <button 
             @click="logout"
             class="bg-red-900/50 hover:bg-red-900 px-6 py-2.5 rounded-lg text-sm font-black text-yellow-500 border border-yellow-500/30 transition-all active:scale-95 uppercase"
