@@ -150,7 +150,7 @@ const spin = async () => {
   
   // Call backend to save result
   try {
-    const response = await fetch('http://localhost:3001/api/v1/users/update-spin', {
+    const response = await fetch(API_ENDPOINTS.UPDATE_SPIN, {
       method: 'PUT',
       headers: { 
         'Content-Type': 'application/json',
@@ -159,13 +159,24 @@ const spin = async () => {
       body: JSON.stringify({ result: result.reward })
     })
     
-    if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Không thể lưu kết quả')
+    const resultData = await response.json()
+    if (!resultData.success) {
+      throw new Error(resultData.message || 'Không thể lưu kết quả')
     }
+
+    // Cập nhật lại thông tin user trong localStorage nếu cần
+    const currentUser = JSON.parse(localStorage.getItem('lucky_user') || '{}')
+    currentUser.spinResult = resultData.data.spinResult
+    currentUser.lastSpinAt = resultData.data.lastSpinAt
+    localStorage.setItem('lucky_user', JSON.stringify(currentUser))
+
   } catch (err) {
     console.error('Error saving spin result:', err)
-    // Even if it fails, we let the animation finish for UX
+    winMessage.value = 'Lỗi: ' + err.message
+    isSpinning.value = false
+    // Hoàn lại lượt quay nếu lỗi server
+    spinsLeft.value++
+    return
   }
   
   setTimeout(() => {
