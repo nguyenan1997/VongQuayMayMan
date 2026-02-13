@@ -1,6 +1,7 @@
 <script setup>
 import { HelpCircle, Trophy, Play, Star, Sparkles, Coins } from 'lucide-vue-next'
 import { ref, onMounted } from 'vue'
+import Auth from './components/Auth.vue'
 
 onMounted(() => {
   // 1. Chặn chuột phải (Context Menu)
@@ -24,31 +25,51 @@ onMounted(() => {
     }
   })
 
-  // 3. (Tùy chọn) Một mẹo nhỏ để làm chậm trình duyệt khi mở DevTools
-  // bằng cách gọi debugger liên tục
-  /*
-  setInterval(() => {
-    debugger
-  }, 100)
-  */
+  checkAuth()
 })
 
 const isSpinning = ref(false)
 const rewards = ['4 vé', '5 vé', '6 vé', '4 vé', '5 vé', '6 vé', '4 vé', '5 vé', '6 vé']
 const currentRotation = ref(0)
 const winMessage = ref('')
-const userName = ref(localStorage.getItem('lucky_user_name') || '')
-const hasStarted = ref(!!userName.value)
-const nameInput = ref('')
+const userName = ref('')
+const userToken = ref('')
+const hasStarted = ref(false)
 
-const startApp = () => {
-  if (nameInput.value.trim().length < 2) {
-    alert('Vui lòng nhập tên của bạn (tối thiểu 2 ký tự)')
-    return
+const checkAuth = () => {
+  const token = localStorage.getItem('lucky_token')
+  const userStr = localStorage.getItem('lucky_user')
+  
+  if (token && userStr) {
+    const user = JSON.parse(userStr)
+    userName.value = user.fullName
+    userToken.value = token
+    hasStarted.value = true
+    
+    // Check spin count from user object if available
+    if (user.spinResult) {
+      spinsLeft.value = 0
+    }
   }
-  userName.value = nameInput.value.trim()
-  localStorage.setItem('lucky_user_name', userName.value)
+}
+
+const onAuthSuccess = (user) => {
+  userName.value = user.fullName
+  userToken.value = localStorage.getItem('lucky_token')
   hasStarted.value = true
+  
+  if (user.spinResult) {
+    spinsLeft.value = 0
+  }
+}
+
+const logout = () => {
+  localStorage.removeItem('lucky_token')
+  localStorage.removeItem('lucky_user')
+  userName.value = ''
+  userToken.value = ''
+  hasStarted.value = false
+  window.location.reload()
 }
 
 // Anti-cheat: Giới hạn lượt quay
@@ -74,7 +95,7 @@ const fetchResultFromServer = () => {
   }
 }
 
-const spin = () => {
+const spin = async () => {
   if (isSpinning.value || spinsLeft.value <= 0) return
   
   isSpinning.value = true
@@ -84,8 +105,6 @@ const spin = () => {
   const result = fetchResultFromServer()
   
   // 2. Tính toán góc quay để dừng đúng ô đó
-  // Mỗi ô chiếm 360/rewards.length độ. 
-  // Ta cần bù thêm số vòng xoay (ví dụ 10 vòng = 3600 độ)
   const segmentDegree = 360 / rewards.length
   const targetDegree = 360 - (result.index * segmentDegree) - (segmentDegree / 2)
   const totalRotation = currentRotation.value + (360 * 10) + (targetDegree - (currentRotation.value % 360))
@@ -94,7 +113,26 @@ const spin = () => {
 
   // 3. Trừ lượt quay ngay khi bắt đầu (đề phòng F5)
   spinsLeft.value--
-  localStorage.setItem('lucky_spins_left', spinsLeft.value)
+  
+  // Call backend to save result
+  try {
+    const response = await fetch('http://localhost:3001/api/v1/users/update-spin', {
+      method: 'PUT',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userToken.value}`
+      },
+      body: JSON.stringify({ result: result.reward })
+    })
+    
+    if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.message || 'Không thể lưu kết quả')
+    }
+  } catch (err) {
+    console.error('Error saving spin result:', err)
+    // Even if it fails, we let the animation finish for UX
+  }
   
   setTimeout(() => {
     isSpinning.value = false
@@ -110,7 +148,8 @@ const resetForTesting = () => {
   winMessage.value = 'Đã khôi phục lượt quay (Chỉ dùng cho Testing)'
 }
 const resetSystem = () => {
-  localStorage.clear()
+  localStorage.removeItem('lucky_token')
+  localStorage.removeItem('lucky_user')
   window.location.reload()
 }
 
@@ -209,37 +248,8 @@ const showFireworks = () => {
 <template>
   <div class="selection:bg-yellow-500/30">
     <canvas id="fireworks-canvas" class="fixed inset-0 pointer-events-none z-[150]"></canvas>
-    <!-- Welcome Screen (Name Input) -->
-    <div v-if="!hasStarted" class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-red-950/95 backdrop-blur-xl">
-      <div class="w-full max-w-md space-y-8 text-center animate-in fade-in zoom-in duration-500">
-        <div class="flex justify-center">
-          <div class="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-2xl shadow-yellow-500/50 border-4 border-red-800 animate-bounce">
-            <Coins class="w-12 h-12 text-red-900" />
-          </div>
-        </div>
-        
-        <div class="space-y-2">
-          <h2 class="text-4xl font-black text-yellow-500 uppercase">Khai Xuân 2025</h2>
-          <p class="text-yellow-100/60 font-medium italic">Vui lòng nhập danh tính để nhận lộc đầu năm</p>
-        </div>
-
-        <div class="space-y-4">
-          <input 
-            v-model="nameInput"
-            @keyup.enter="startApp"
-            type="text" 
-            placeholder="Nhập tên của bạn..."
-            class="w-full bg-red-900/40 border-2 border-yellow-500/30 rounded-2xl px-6 py-4 text-xl font-bold text-yellow-200 placeholder:text-yellow-500/30 focus:outline-none focus:border-yellow-500 transition-all text-center"
-          />
-          <button 
-            @click="startApp"
-            class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-red-950 py-4 rounded-2xl font-black text-xl uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-yellow-500/20"
-          >
-            Bắt đầu hái lộc
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- Auth Screen (Login/Register) -->
+    <Auth v-if="!hasStarted" @auth-success="onAuthSuccess" />
 
     <!-- Main Game Content -->
     <template v-if="hasStarted">
@@ -259,8 +269,11 @@ const showFireworks = () => {
             <span class="text-xs font-black text-yellow-500/60 uppercase">Người chơi:</span>
             <span class="text-sm font-black text-yellow-400 uppercase tracking-wider">{{ userName }}</span>
           </div>
-          <button class="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 px-6 py-2.5 rounded-lg text-sm font-black text-red-950 transition-all hover:shadow-lg hover:shadow-yellow-500/30 active:scale-95 uppercase">
-            Vào Chơi
+          <button 
+            @click="logout"
+            class="bg-red-900/50 hover:bg-red-900 px-6 py-2.5 rounded-lg text-sm font-black text-yellow-500 border border-yellow-500/30 transition-all active:scale-95 uppercase"
+          >
+            Đăng Xuất
           </button>
         </div>
       </nav>
