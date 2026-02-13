@@ -180,9 +180,6 @@ const spin = async () => {
     currentUser.lastSpinAt = resultData.data.lastSpinAt
     localStorage.setItem('lucky_user', JSON.stringify(currentUser))
     
-    // Cập nhật lại BXH sau khi quay xong
-    fetchLeaderboard();
-
   } catch (err) {
     console.error('Error saving spin result:', err)
     winMessage.value = 'Lỗi: ' + err.message
@@ -196,6 +193,8 @@ const spin = async () => {
     isSpinning.value = false
     winMessage.value = `Chúc mừng ${userName.value}! Bạn đã hái lộc được ${result.reward}`
     showFireworks()
+    // Chỉ cập nhật Bảng Vàng SAU KHI bánh xe dừng hẳn
+    fetchLeaderboard();
   }, 3000)
 }
 
