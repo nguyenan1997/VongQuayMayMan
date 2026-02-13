@@ -2,6 +2,7 @@
 import { HelpCircle, Trophy, Play, Star, Sparkles, Coins } from 'lucide-vue-next'
 import { ref, onMounted } from 'vue'
 import Auth from './components/Auth.vue'
+import { API_ENDPOINTS } from './configs/api'
 
 onMounted(() => {
   // 1. Chặn chuột phải (Context Menu)
@@ -34,21 +35,53 @@ const currentRotation = ref(0)
 const winMessage = ref('')
 const userName = ref('')
 const userToken = ref('')
+const spinCount = ref(0)
 const hasStarted = ref(false)
 
-const checkAuth = () => {
+const checkAuth = async () => {
   const token = localStorage.getItem('lucky_token')
-  const userStr = localStorage.getItem('lucky_user')
-  
-  if (token && userStr) {
-    const user = JSON.parse(userStr)
-    userName.value = user.fullName
-    userToken.value = token
-    hasStarted.value = true
-    
-    // Check spin count from user object if available
-    if (user.spinResult) {
-      spinsLeft.value = 0
+  if (!token) {
+    hasStarted.value = false
+    return
+  }
+
+  try {
+    const response = await fetch(API_ENDPOINTS.GET_ME, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    const result = await response.json()
+
+    if (result.success) {
+      const user = result.data
+      userName.value = user.fullName
+      userToken.value = token
+      spinCount.value = user.spinCount || 0
+      hasStarted.value = true
+      
+      // Cập nhật lại localStorage với thông tin mới nhất
+      localStorage.setItem('lucky_user', JSON.stringify(user))
+      
+      // Đồng bộ lượt quay từ server
+      if (user.spinResult) {
+        spinsLeft.value = 0
+      } else {
+        spinsLeft.value = MAX_SPINS
+      }
+    } else {
+      // Token không hợp lệ hoặc hết hạn
+      logout()
+    }
+  } catch (err) {
+    console.error('Lỗi kiểm tra xác thực:', err)
+    // Nếu lỗi mạng, vẫn cho dùng tạm dữ liệu cũ từ localStorage nếu có
+    const userStr = localStorage.getItem('lucky_user')
+    if (userStr) {
+      const user = JSON.parse(userStr)
+      userName.value = user.fullName
+      userToken.value = token
+      hasStarted.value = true
     }
   }
 }
@@ -56,6 +89,7 @@ const checkAuth = () => {
 const onAuthSuccess = (user) => {
   userName.value = user.fullName
   userToken.value = localStorage.getItem('lucky_token')
+  spinCount.value = user.spinCount || 0
   hasStarted.value = true
   
   if (user.spinResult) {
@@ -265,6 +299,10 @@ const showFireworks = () => {
         </div>
         
         <div class="flex items-center gap-8">
+          <div class="hidden sm:flex items-center gap-2 px-4 py-2 bg-yellow-500/10 rounded-full border border-yellow-500/20">
+            <span class="text-xs font-black text-yellow-500/60 uppercase">Lượt quay:</span>
+            <span class="text-sm font-black text-yellow-400 uppercase tracking-wider">{{ spinCount }}</span>
+          </div>
           <div class="hidden sm:flex items-center gap-2 px-4 py-2 bg-yellow-500/10 rounded-full border border-yellow-500/20">
             <span class="text-xs font-black text-yellow-500/60 uppercase">Người chơi:</span>
             <span class="text-sm font-black text-yellow-400 uppercase tracking-wider">{{ userName }}</span>

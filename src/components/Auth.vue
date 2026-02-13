@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { Coins, User, Phone, Lock, ArrowRight, UserPlus, LogIn } from 'lucide-vue-next'
+import { API_ENDPOINTS } from '../configs/api'
 
 const emit = defineEmits(['auth-success'])
 
@@ -28,7 +29,7 @@ const handleLogin = async () => {
   loading.value = true
   error.value = ''
   try {
-    const response = await fetch('http://localhost:3001/api/v1/users/login', {
+    const response = await fetch(API_ENDPOINTS.LOGIN, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(loginData.value)
@@ -53,7 +54,7 @@ const handleRegister = async () => {
   loading.value = true
   error.value = ''
   try {
-    const response = await fetch('http://localhost:3001/api/v1/users/register', {
+    const response = await fetch(API_ENDPOINTS.REGISTER, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(registerData.value)
