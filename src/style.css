@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+:root {
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+  background-color: #3d0000;
+  /* Màu nền tết */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  /* Đưa hẳn background gradient ra body để phủ kín màn hình */
+  background: radial-gradient(circle at center, #9e0000 0%, #3d0000 100%);
+  background-attachment: fixed;
+  color: white;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Chỉ cho phép thanh cuộn này tồn tại */
+}
+
+#app {
+  width: 100%;
+}
