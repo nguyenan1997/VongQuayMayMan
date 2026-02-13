@@ -388,7 +388,7 @@ const showFireworks = () => {
               <Play class="w-6 h-6 lg:w-7 lg:h-7 fill-red-900" />
               <span v-if="isSpinning">ĐANG HÁI LỘC...</span>
               <span v-else-if="spinsLeft > 0">QUAY NGAY</span>
-              <span v-else>HẾT LƯỢT QUAY HÔM NAY</span>
+              <span v-else>BẠN ĐÃ HẾT LƯỢT QUAY</span>
               <div class="absolute -inset-1 bg-yellow-400/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </button>
             
