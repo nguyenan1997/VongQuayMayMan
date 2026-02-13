@@ -53,16 +53,17 @@ const checkAuth = async () => {
       userToken.value = token
       console.log("CheckAuth - User data:", user)
       
-      // Logic đúng: 
-      // - Nếu ĐÃ CÓ kết quả (spinResult có chữ) -> spin = 0 (hết lượt)
-      // - Nếu CHƯA CÓ kết quả (spinResult rỗng/null) -> lấy spinCount từ server
-      if (user.spinResult && user.spinResult !== "null" && user.spinResult.trim() !== "") {
+      // Logic chuẩn theo API của bạn:
+      // - Nếu CHƯA CÓ kết quả (spinResult là null/rỗng) -> Được quay (spinsLeft = 1)
+      // - Nếu ĐÀ CÓ kết quả (spinResult có giá trị) -> Hết lượt (spinsLeft = 0)
+      if (!user.spinResult || user.spinResult === "null" || user.spinResult.trim() === "") {
+        spinsLeft.value = 1
+        winMessage.value = "" // Xóa thông báo nếu có
+        console.log("-> Chưa quay (null/rỗng), cho phép quay.")
+      } else {
         spinsLeft.value = 0
         winMessage.value = "Bạn đã hết lượt hái lộc hôm nay!"
-        console.log("-> Đã quay rồi, khóa nút quay.")
-      } else {
-        spinsLeft.value = user.spinCount || 0
-        console.log("-> Chưa quay, lượt quay khả dụng:", spinsLeft.value)
+        console.log("-> Đã quay rồi (có spinResult), khóa nút quay.")
       }
       
       spinCount.value = user.spinCount || 0
@@ -96,8 +97,6 @@ const checkAuth = async () => {
 
 const onAuthSuccess = async (user) => {
   console.log("Đăng nhập/Đăng ký thành công, bắt đầu đồng bộ dữ liệu từ Server...");
-  // Sau khi login/register thành công, token đã được lưu vào localStorage ở component Auth
-  // Chúng ta chỉ cần gọi checkAuth để fetch data chuẩn nhất từ API /me
   await checkAuth();
   await fetchLeaderboard();
 }
@@ -314,10 +313,7 @@ const showFireworks = () => {
         </div>
         
         <div class="flex items-center gap-8">
-          <div class="hidden sm:flex items-center gap-2 px-4 py-2 bg-yellow-500/10 rounded-full border border-yellow-500/20">
-            <span class="text-xs font-black text-yellow-500/60 uppercase">Lượt quay:</span>
-            <span class="text-sm font-black text-yellow-400 uppercase tracking-wider">{{ spinCount }}</span>
-          </div>
+
           <div class="hidden sm:flex items-center gap-2 px-4 py-2 bg-yellow-500/10 rounded-full border border-yellow-500/20">
             <span class="text-xs font-black text-yellow-500/60 uppercase">Người chơi:</span>
             <span class="text-sm font-black text-yellow-400 uppercase tracking-wider">{{ userName }}</span>
