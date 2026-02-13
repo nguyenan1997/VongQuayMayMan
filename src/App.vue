@@ -5,27 +5,6 @@ import Auth from './components/Auth.vue'
 import { API_ENDPOINTS } from './configs/api'
 
 onMounted(() => {
-  // 1. Chặn chuột phải (Context Menu)
-  document.addEventListener('contextmenu', (e) => {
-    e.preventDefault()
-  })
-
-  // 2. Chặn các phím tắt phổ biến để mở DevTools
-  document.addEventListener('keydown', (e) => {
-    // F12
-    if (e.key === 'F12') {
-      e.preventDefault()
-    }
-    // Ctrl + Shift + I/C/J
-    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C' || e.key === 'J')) {
-      e.preventDefault()
-    }
-    // Ctrl + U (Xem source code)
-    if (e.ctrlKey && e.key === 'u') {
-      e.preventDefault()
-    }
-  })
-
   checkAuth()
 })
 
@@ -37,6 +16,10 @@ const userName = ref('')
 const userToken = ref('')
 const spinCount = ref(0)
 const hasStarted = ref(false)
+const spinsLeft = ref(0)
+const MAX_SPINS = 1
+const lastSpinDate = ref('')
+const leaderboard = ref([])
 
 const checkAuth = async () => {
   const token = localStorage.getItem('lucky_token')
@@ -57,18 +40,25 @@ const checkAuth = async () => {
       const user = result.data
       userName.value = user.fullName
       userToken.value = token
+      console.log("Dữ liệu User từ Server:", user)
+      
+      // Đồng bộ lượt quay từ server theo logic của bạn:
+      // 1. Nếu có spinResult (đã quay) -> spin = 0
+      // 2. Nếu spinResult là null -> spin = 0
+      // 3. Chỉ khi nào thỏa mãn điều kiện khác mới lấy spinCount
+      if (!user.spinResult || user.spinResult === "null" || user.spinResult.trim() === "") {
+        spinsLeft.value = 0
+        console.log("Trường hợp spinResult là null/rỗng -> Lượt quay = 0")
+      } else if (user.spinResult) {
+        spinsLeft.value = 0
+        console.log("Trường hợp đã có spinResult -> Lượt quay = 0")
+      } else {
+        spinsLeft.value = user.spinCount || 0
+      }
+      
       spinCount.value = user.spinCount || 0
       hasStarted.value = true
-      
-      // Cập nhật lại localStorage với thông tin mới nhất
-      localStorage.setItem('lucky_user', JSON.stringify(user))
-      
-      // Đồng bộ lượt quay từ server
-      if (user.spinResult) {
-        spinsLeft.value = 0
-      } else {
-        spinsLeft.value = MAX_SPINS
-      }
+      fetchLeaderboard(); // Lấy BXH sau khi xác thực thành công
     } else {
       // Token không hợp lệ hoặc hết hạn
       logout()
@@ -81,19 +71,37 @@ const checkAuth = async () => {
       const user = JSON.parse(userStr)
       userName.value = user.fullName
       userToken.value = token
+      spinCount.value = user.spinCount || 0
+      
+      // Đồng bộ spinsLeft từ cache nếu lỗi mạng
+      if (user.spinResult && user.spinResult !== "null") {
+        spinsLeft.value = 0
+      } else {
+        spinsLeft.value = user.spinCount || 0
+      }
+
       hasStarted.value = true
     }
   }
 }
 
-const onAuthSuccess = (user) => {
-  userName.value = user.fullName
-  userToken.value = localStorage.getItem('lucky_token')
-  spinCount.value = user.spinCount || 0
-  hasStarted.value = true
-  
-  if (user.spinResult) {
-    spinsLeft.value = 0
+const onAuthSuccess = async (user) => {
+  console.log("Đăng nhập/Đăng ký thành công, bắt đầu đồng bộ dữ liệu từ Server...");
+  // Sau khi login/register thành công, token đã được lưu vào localStorage ở component Auth
+  // Chúng ta chỉ cần gọi checkAuth để fetch data chuẩn nhất từ API /me
+  await checkAuth();
+  await fetchLeaderboard();
+}
+
+const fetchLeaderboard = async () => {
+  try {
+    const response = await fetch(API_ENDPOINTS.GET_RESULTS);
+    const result = await response.json();
+    if (result.success) {
+      leaderboard.value = result.data;
+    }
+  } catch (err) {
+    console.error('Lỗi lấy bảng xếp hạng:', err);
   }
 }
 
@@ -106,18 +114,7 @@ const logout = () => {
   window.location.reload()
 }
 
-// Anti-cheat: Giới hạn lượt quay
-const MAX_SPINS = 1
-const spinsLeft = ref(localStorage.getItem('lucky_spins_left') !== null ? parseInt(localStorage.getItem('lucky_spins_left')) : MAX_SPINS)
-const lastSpinDate = ref(localStorage.getItem('last_spin_date') ?? '')
-
-// Kiểm tra và reset lượt quay theo ngày mới
-const today = new Date().toDateString()
-if (lastSpinDate.value !== today) {
-  spinsLeft.value = MAX_SPINS
-  localStorage.setItem('lucky_spins_left', MAX_SPINS)
-  localStorage.setItem('last_spin_date', today)
-}
+// Giới hạn lượt quay (Dùng để hiển thị hoặc fallback) - Đã đưa lên top
 
 const fetchResultFromServer = () => {
   // Giả lập gọi API lên Server để lấy kết quả
@@ -169,6 +166,9 @@ const spin = async () => {
     currentUser.spinResult = resultData.data.spinResult
     currentUser.lastSpinAt = resultData.data.lastSpinAt
     localStorage.setItem('lucky_user', JSON.stringify(currentUser))
+    
+    // Cập nhật lại BXH sau khi quay xong
+    fetchLeaderboard();
 
   } catch (err) {
     console.error('Error saving spin result:', err)
@@ -187,16 +187,6 @@ const spin = async () => {
 }
 
 
-const resetForTesting = () => {
-  spinsLeft.value = MAX_SPINS
-  localStorage.setItem('lucky_spins_left', MAX_SPINS)
-  winMessage.value = 'Đã khôi phục lượt quay (Chỉ dùng cho Testing)'
-}
-const resetSystem = () => {
-  localStorage.removeItem('lucky_token')
-  localStorage.removeItem('lucky_user')
-  window.location.reload()
-}
 
 // Firework Logic
 const showFireworks = () => {
@@ -353,17 +343,29 @@ const showFireworks = () => {
               <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-500/10 blur-3xl rounded-full"></div>
               <h3 class="text-xl lg:text-2xl font-black text-yellow-500 mb-4 lg:mb-6 flex items-center gap-3">
                 <Trophy class="w-5 h-5 lg:w-6 lg:h-6" />
-                DANH SÁCH GIẢI THƯỞNG
+                BẢNG VÀNG HÁI LỘC
               </h3>
-              <ul class="space-y-3 lg:space-y-4">
-                <li v-for="item in ['6 vé - Đại Cát', '5 vé - Như Ý', '4 vé - Tài Lộc']" :key="item" 
-                    class="flex items-center justify-between p-3 lg:p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-yellow-500/10 hover:border-yellow-500/30 transition-all cursor-default">
-                  <span class="text-base lg:text-lg font-bold">{{ item.split(' - ')[0] }}</span>
-                  <span class="text-[10px] lg:text-sm font-black text-yellow-500 bg-yellow-500/10 px-2 lg:px-3 py-1 rounded-full uppercase tracking-widest border border-yellow-500/20">
-                    {{ item.split(' - ')[1] }}
-                  </span>
-                </li>
-              </ul>
+              <div class="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                <ul class="space-y-3 lg:space-y-4">
+                  <li v-for="(item, index) in leaderboard" :key="index" 
+                      class="flex items-center justify-between p-3 lg:p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-yellow-500/10 hover:border-yellow-500/30 transition-all cursor-default animate-in fade-in slide-in-from-right duration-500"
+                      :style="{ animationDelay: `${index * 100}ms` }"
+                  >
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 font-bold text-sm border border-yellow-500/30">
+                        {{ index + 1 }}
+                      </div>
+                      <span class="text-base font-bold text-yellow-100">{{ item.fullName }}</span>
+                    </div>
+                    <span class="text-[10px] lg:text-sm font-black text-yellow-500 bg-yellow-500/10 px-2 lg:px-3 py-1 rounded-full uppercase tracking-widest border border-yellow-500/20 shadow-sm shadow-yellow-500/10">
+                      {{ item.spinResult || 'Đang chờ...' }}
+                    </span>
+                  </li>
+                  <li v-if="leaderboard.length === 0" class="text-center py-10 text-yellow-500/40 italic text-sm">
+                    Chưa có lượt hái lộc nào hôm nay...
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <div class="flex flex-col gap-4">
@@ -387,12 +389,7 @@ const showFireworks = () => {
               🎊 {{ winMessage }} 🎊
             </p>
 
-            <button 
-              @click="resetSystem"
-              class="text-[10px] text-yellow-500/20 hover:text-yellow-500/50 transition-colors uppercase font-bold tracking-widest mt-4"
-            >
-              [ Reset Toàn Bộ Hệ Thống ]
-            </button>
+
           </div>
           </div>
 
@@ -471,6 +468,21 @@ const showFireworks = () => {
 /* Custom shadow for the wheel text */
 .drop-shadow-gold {
   filter: drop-shadow(0 2px 2px rgba(234, 179, 8, 0.8));
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(234, 179, 8, 0.3);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(234, 179, 8, 0.5);
 }
 
 @keyframes firework {

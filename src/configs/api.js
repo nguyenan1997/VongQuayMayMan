@@ -5,4 +5,5 @@ export const API_ENDPOINTS = {
     REGISTER: `${API_BASE_URL}/users/register`,
     GET_ME: `${API_BASE_URL}/users/me`,
     UPDATE_SPIN: `${API_BASE_URL}/users/update-spin`,
+    GET_RESULTS: `${API_BASE_URL}/users/results`,
 };
