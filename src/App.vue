@@ -1,6 +1,6 @@
 <script setup>
 import { HelpCircle, Trophy, Play, Star, Sparkles, Coins } from 'lucide-vue-next'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import Auth from './components/Auth.vue'
 import { API_ENDPOINTS } from './configs/api'
 
@@ -21,6 +21,17 @@ const MAX_SPINS = 1
 const lastSpinDate = ref('')
 const leaderboard = ref([])
 
+// Xử lý dữ liệu bảng xếp hạng: Lọc người chưa quay, trim khoảng trắng và sắp xếp mới nhất lên đầu
+const sortedLeaderboard = computed(() => {
+  return leaderboard.value
+    .filter(item => item.spinResult && item.spinResult.trim() !== "" && item.spinResult !== "null")
+    .map(item => ({
+      ...item,
+      spinResult: item.spinResult.trim()
+    }))
+    .sort((a, b) => new Date(b.lastSpinAt) - new Date(a.lastSpinAt))
+})
+
 const checkAuth = async () => {
   const token = localStorage.getItem('lucky_token')
   if (!token) {
@@ -40,20 +51,18 @@ const checkAuth = async () => {
       const user = result.data
       userName.value = user.fullName
       userToken.value = token
-      console.log("Dữ liệu User từ Server:", user)
+      console.log("CheckAuth - User data:", user)
       
-      // Đồng bộ lượt quay từ server theo logic của bạn:
-      // 1. Nếu có spinResult (đã quay) -> spin = 0
-      // 2. Nếu spinResult là null -> spin = 0
-      // 3. Chỉ khi nào thỏa mãn điều kiện khác mới lấy spinCount
-      if (!user.spinResult || user.spinResult === "null" || user.spinResult.trim() === "") {
+      // Logic đúng: 
+      // - Nếu ĐÃ CÓ kết quả (spinResult có chữ) -> spin = 0 (hết lượt)
+      // - Nếu CHƯA CÓ kết quả (spinResult rỗng/null) -> lấy spinCount từ server
+      if (user.spinResult && user.spinResult !== "null" && user.spinResult.trim() !== "") {
         spinsLeft.value = 0
-        console.log("Trường hợp spinResult là null/rỗng -> Lượt quay = 0")
-      } else if (user.spinResult) {
-        spinsLeft.value = 0
-        console.log("Trường hợp đã có spinResult -> Lượt quay = 0")
+        winMessage.value = "Bạn đã hết lượt hái lộc hôm nay!"
+        console.log("-> Đã quay rồi, khóa nút quay.")
       } else {
         spinsLeft.value = user.spinCount || 0
+        console.log("-> Chưa quay, lượt quay khả dụng:", spinsLeft.value)
       }
       
       spinCount.value = user.spinCount || 0
@@ -95,7 +104,12 @@ const onAuthSuccess = async (user) => {
 
 const fetchLeaderboard = async () => {
   try {
-    const response = await fetch(API_ENDPOINTS.GET_RESULTS);
+    const token = localStorage.getItem('lucky_token');
+    const response = await fetch(API_ENDPOINTS.GET_RESULTS, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     const result = await response.json();
     if (result.success) {
       leaderboard.value = result.data;
@@ -347,7 +361,7 @@ const showFireworks = () => {
               </h3>
               <div class="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 <ul class="space-y-3 lg:space-y-4">
-                  <li v-for="(item, index) in leaderboard" :key="index" 
+                  <li v-for="(item, index) in sortedLeaderboard" :key="index" 
                       class="flex items-center justify-between p-3 lg:p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-yellow-500/10 hover:border-yellow-500/30 transition-all cursor-default animate-in fade-in slide-in-from-right duration-500"
                       :style="{ animationDelay: `${index * 100}ms` }"
                   >
@@ -361,7 +375,7 @@ const showFireworks = () => {
                       {{ item.spinResult || 'Đang chờ...' }}
                     </span>
                   </li>
-                  <li v-if="leaderboard.length === 0" class="text-center py-10 text-yellow-500/40 italic text-sm">
+                  <li v-if="sortedLeaderboard.length === 0" class="text-center py-10 text-yellow-500/40 italic text-sm">
                     Chưa có lượt hái lộc nào hôm nay...
                   </li>
                 </ul>
@@ -369,10 +383,7 @@ const showFireworks = () => {
             </div>
 
             <div class="flex flex-col gap-4">
-            <div class="flex items-center justify-between px-5 py-3 bg-red-950/40 rounded-xl border border-yellow-500/20">
-              <span class="text-sm font-bold text-yellow-100/50 uppercase tracking-wider">Lượt quay hôm nay:</span>
-              <span class="text-xl lg:text-2xl font-black text-yellow-400">{{ spinsLeft }} / {{ MAX_SPINS }}</span>
-            </div>
+
 
             <button 
               @click="spin"
@@ -381,7 +392,7 @@ const showFireworks = () => {
             >
               <Play class="w-6 h-6 lg:w-7 lg:h-7 fill-red-900" />
               <span v-if="spinsLeft > 0">{{ isSpinning ? 'HÁI LỘC XUÂN...' : 'QUAY NGAY' }}</span>
-              <span v-else>HẾT LƯỢT QUAY</span>
+              <span v-else>BẠN ĐÃ HẾT LƯỢT QUAY</span>
               <div class="absolute -inset-1 bg-yellow-400/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </button>
             
@@ -453,13 +464,7 @@ const showFireworks = () => {
         </div>
       </main>
 
-      <!-- Bottom Decoration: Apricot Blossoms placeholder -->
-      <div class="fixed bottom-0 left-0 p-8 flex gap-4 pointer-events-none opacity-40">
-        <div v-for="i in 3" :key="i" class="w-10 h-10 bg-yellow-400 rounded-full animate-pulse" :style="{ animationDelay: `${i * 0.5}s` }"></div>
-      </div>
-      <div class="fixed bottom-0 right-0 p-8 flex gap-4 pointer-events-none opacity-40">
-        <div v-for="i in 3" :key="i" class="w-10 h-10 bg-yellow-400 rounded-full animate-pulse" :style="{ animationDelay: `${i * 0.5}s` }"></div>
-      </div>
+
     </template>
   </div>
 </template>
