@@ -1,12 +1,24 @@
 <script setup>
 import { HelpCircle, Trophy, Play, Star, Sparkles, Coins } from 'lucide-vue-next'
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import Auth from './components/Auth.vue'
 import Admin from './components/Admin.vue'
 import { API_ENDPOINTS } from './configs/api'
 
 onMounted(() => {
   checkAuth()
+  
+  // Tự động cập nhật dữ liệu mỗi 10 giây để đảm bảo realtime
+  const refreshInterval = setInterval(() => {
+    if (hasStarted.value && !isAdminView.value) {
+      fetchPrizes()
+      fetchLeaderboard()
+    }
+  }, 10000)
+
+  onUnmounted(() => {
+    clearInterval(refreshInterval)
+  })
 })
 
 const isSpinning = ref(false)
@@ -183,6 +195,14 @@ const fetchResultFromServer = () => {
 const spin = async () => {
   if (isSpinning.value || spinsLeft.value <= 0) return
   
+  // 0. Kiểm tra lại kho quà "phút chót" trước khi quay
+  await fetchPrizes()
+  if (prizesList.value.length === 0) {
+    winMessage.value = 'Rất tiếc, quà tặng trong đợt này đã hết sạch!'
+    alert('Rất tiếc, quà tặng trong đợt này đã hết sạch! Giao diện sẽ được cập nhật lại.')
+    return
+  }
+  
   isSpinning.value = true
   winMessage.value = ''
   
@@ -207,7 +227,7 @@ const spin = async () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${userToken.value}`
       },
-      body: JSON.stringify({ result: result.reward })
+      body: JSON.stringify({ result: parseInt(result.reward) })
     })
     
     const resultData = await response.json()
