@@ -257,7 +257,7 @@ const refreshAllData = async () => {
             <tbody class="divide-y" :class="isDark ? 'divide-slate-800' : 'divide-slate-100'">
               <tr v-for="(prize, index) in prizeConfigs" :key="prize.id" class="group">
                 <td class="py-4 px-2">
-                  <span class="font-bold whitespace-nowrap" :class="isDark ? 'text-slate-200' : 'text-slate-800'">Cấu hình #{{ index + 1 }}</span>
+                  <span class="font-bold whitespace-nowrap" :class="isDark ? 'text-slate-200' : 'text-slate-800'">{{ prize.ticketsPerWinner }} vé</span>
                 </td>
                 <td class="py-4 px-2 font-mono">{{ prize.maxWinners }}</td>
                 <td class="py-4 px-2 font-mono">{{ prize.ticketsPerWinner }}</td>

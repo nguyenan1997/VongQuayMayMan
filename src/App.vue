@@ -10,7 +10,8 @@ onMounted(() => {
 })
 
 const isSpinning = ref(false)
-const rewards = ['4 vé', '5 vé', '6 vé', '4 vé', '5 vé', '6 vé', '4 vé', '5 vé', '6 vé']
+const rewards = ref(['4 vé', '5 vé', '6 vé', '4 vé', '5 vé', '6 vé']) 
+const prizesList = ref([])
 const currentRotation = ref(0)
 const winMessage = ref('')
 const userName = ref('')
@@ -76,6 +77,7 @@ const checkAuth = async () => {
       spinCount.value = user.spinCount || 0
       hasStarted.value = true
       fetchLeaderboard(); // Lấy BXH sau khi xác thực thành công
+      await fetchPrizes(); // Lấy danh sách giải thưởng cho vòng quay
     } else {
       // Token không hợp lệ hoặc hết hạn
       logout()
@@ -125,6 +127,39 @@ const fetchLeaderboard = async () => {
   }
 }
 
+const fetchPrizes = async () => {
+  try {
+    const token = localStorage.getItem('lucky_token');
+    const response = await fetch(API_ENDPOINTS.PRIZES, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    const result = await response.json()
+    if (result.success && result.data) {
+      prizesList.value = result.data.filter(p => p.isActive)
+      
+      if (prizesList.value.length > 0) {
+        // Tạo danh sách rewards từ prize configs
+        let newRewards = prizesList.value.map(p => `${p.ticketsPerWinner} vé`)
+        
+        // Đảm bảo số ô là số chẵn và >= 6 để màu sắc đan xen đẹp
+        let finalRewards = [...newRewards]
+        while (finalRewards.length < 6 || finalRewards.length % 2 !== 0) {
+          finalRewards = [...finalRewards, ...newRewards]
+          if (finalRewards.length > 12) break // Không quá nhiều ô
+        }
+        
+        rewards.value = finalRewards
+      } else {
+        rewards.value = ['4 vé', '5 vé', '6 vé', '4 vé', '5 vé', '6 vé']
+      }
+    }
+  } catch (err) {
+    console.error('Lỗi lấy danh sách giải thưởng:', err)
+  }
+}
+
 const logout = () => {
   localStorage.removeItem('lucky_token')
   localStorage.removeItem('lucky_user')
@@ -137,12 +172,12 @@ const logout = () => {
 // Giới hạn lượt quay (Dùng để hiển thị hoặc fallback) - Đã đưa lên top
 
 const fetchResultFromServer = () => {
-  // Giả lập gọi API lên Server để lấy kết quả
-  // Server sẽ quyết định kết quả dựa trên tỉ lệ % thật
-  const randomIndex = Math.floor(Math.random() * rewards.length)
+  // TODO: Trong thực tế, server nên trả về kết quả dựa trên kho giải thưởng thực tế
+  // Hiện tại ta lấy ngẫu nhiên từ danh sách rewards đang hiển thị
+  const randomIndex = Math.floor(Math.random() * rewards.value.length)
   return {
     index: randomIndex,
-    reward: rewards[randomIndex]
+    reward: rewards.value[randomIndex]
   }
 }
 
@@ -156,7 +191,7 @@ const spin = async () => {
   const result = fetchResultFromServer()
   
   // 2. Tính toán góc quay để dừng đúng ô đó
-  const segmentDegree = 360 / rewards.length
+  const segmentDegree = 360 / rewards.value.length
   const targetDegree = 360 - (result.index * segmentDegree) - (segmentDegree / 2)
   const totalRotation = currentRotation.value + (360 * 10) + (targetDegree - (currentRotation.value % 360))
   
