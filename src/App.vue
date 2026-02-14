@@ -423,9 +423,9 @@ const showFireworks = () => {
             <Sparkles class="w-3 h-3 lg:w-4 lg:h-4 fill-red-950" />
           </div>
           
-          <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tighter leading-tight w-full max-w-none mx-auto px-4 flex flex-col items-center">
+          <h1 class="text-xl sm:text-4xl lg:text-5xl font-black tracking-tighter leading-tight w-full max-w-none mx-auto px-4 flex flex-col items-center">
             <span class="text-white block drop-shadow-lg">Khai Xuân</span>
-            <div class="flex flex-wrap justify-center gap-[0.1em]">
+            <div class="flex flex-wrap justify-center gap-[0.05em] sm:gap-[0.1em]">
               <span v-for="(char, index) in 'Nhận quà khủng cùng Mayogu'.split('')" :key="index"
                 class="bg-clip-text text-transparent bg-gradient-to-b from-yellow-200 via-emerald-400 to-emerald-600 drop-shadow-2xl animate-wave inline-block"
                 :style="{ animationDelay: `${index * 0.05}s` }">
