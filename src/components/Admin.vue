@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { Users, Search, RefreshCw, Trophy, Ban, CheckCircle, ArrowLeft, Download, Moon, Sun } from 'lucide-vue-next'
+import { Users, Search, RefreshCw, Trophy, Ban, CheckCircle, ArrowLeft, Download, Moon, Sun, Ticket, Settings, Save } from 'lucide-vue-next'
 import { API_ENDPOINTS } from '../configs/api'
 
 const props = defineProps(['token', 'isAdminRole'])
@@ -10,6 +10,14 @@ const users = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
 const isDark = ref(localStorage.getItem('admin_theme') === 'dark')
+const prizeConfigs = ref([])
+const showPrizeModal = ref(false)
+const editingPrize = ref(null)
+const prizeForm = ref({
+  maxWinners: 0,
+  ticketsPerWinner: 1
+})
+const savingPrize = ref(false)
 
 const toggleTheme = () => {
   isDark.value = !isDark.value
@@ -35,6 +43,92 @@ const fetchAllUsers = async () => {
   }
 }
 
+const fetchPrizeConfigs = async () => {
+  try {
+    const response = await fetch(API_ENDPOINTS.PRIZES, {
+      headers: {
+        'Authorization': `Bearer ${props.token}`
+      }
+    })
+    const result = await response.json()
+    if (result.success) {
+      prizeConfigs.value = result.data || []
+    }
+  } catch (err) {
+    console.error('Lỗi lấy cấu hình giải thưởng:', err)
+  }
+}
+
+const openPrizeModal = (prize = null) => {
+  if (prize) {
+    editingPrize.value = prize.id
+    prizeForm.value = {
+      maxWinners: prize.maxWinners,
+      ticketsPerWinner: prize.ticketsPerWinner
+    }
+  } else {
+    editingPrize.value = null
+    prizeForm.value = { maxWinners: 0, ticketsPerWinner: 1 }
+  }
+  showPrizeModal.value = true
+}
+
+const savePrizeConfig = async () => {
+  if (prizeForm.value.maxWinners <= 0 || prizeForm.value.ticketsPerWinner <= 0) {
+    alert('Vui lòng nhập giá trị hợp lệ!')
+    return
+  }
+
+  savingPrize.value = true
+  try {
+    const isEdit = !!editingPrize.value
+    const url = isEdit ? `${API_ENDPOINTS.PRIZES}/${editingPrize.value}` : API_ENDPOINTS.PRIZES
+    const method = isEdit ? 'PUT' : 'POST'
+    
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${props.token}`
+      },
+      body: JSON.stringify(prizeForm.value)
+    })
+    const result = await response.json()
+    if (result.success) {
+      alert(isEdit ? 'Cập nhật thành công!' : 'Thêm mới thành công!')
+      showPrizeModal.value = false
+      fetchPrizeConfigs()
+    } else {
+      alert('Lỗi: ' + result.message)
+    }
+  } catch (err) {
+    console.error('Lỗi lưu cấu hình:', err)
+    alert('Đã có lỗi xảy ra.')
+  } finally {
+    savingPrize.value = false
+  }
+}
+
+const deletePrize = async (id) => {
+  if (!confirm('Bạn có chắc chắn muốn xóa cấu hình này?')) return
+  try {
+    const response = await fetch(`${API_ENDPOINTS.PRIZES}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${props.token}`
+      }
+    })
+    const result = await response.json()
+    if (result.success) {
+      fetchPrizeConfigs()
+    } else {
+      alert('Không thể xóa: ' + result.message)
+    }
+  } catch (err) {
+    console.error('Lỗi xóa cấu hình:', err)
+  }
+}
+
 const filteredUsers = computed(() => {
   if (!searchQuery.value) return users.value
   const q = searchQuery.value.toLowerCase()
@@ -44,7 +138,10 @@ const filteredUsers = computed(() => {
   )
 })
 
-onMounted(fetchAllUsers)
+onMounted(() => {
+  fetchAllUsers()
+  fetchPrizeConfigs()
+})
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '---'
@@ -73,6 +170,17 @@ const exportCSV = () => {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+}
+const refreshAllData = async () => {
+  loading.value = true
+  try {
+    await Promise.all([
+      fetchAllUsers(),
+      fetchPrizeConfigs()
+    ])
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -105,7 +213,7 @@ const exportCSV = () => {
             <Download class="w-4 h-4" /> Xuất dữ liệu
           </button>
           
-          <button @click="fetchAllUsers" :disabled="loading" class="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-semibold text-[14px] hover:bg-indigo-700 transition-all shadow-xl active:scale-95 disabled:opacity-50 shadow-indigo-500/15 duration-200">
+          <button @click="refreshAllData" :disabled="loading" class="flex-1 md:flex-none flex items-center justify-center gap-2.5 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-semibold text-[14px] hover:bg-indigo-700 transition-all shadow-xl active:scale-95 disabled:opacity-50 shadow-indigo-500/15 duration-200">
             <RefreshCw class="w-4 h-4" :class="{'animate-spin': loading}" /> Làm mới
           </button>
           
@@ -113,6 +221,105 @@ const exportCSV = () => {
             :class="isDark ? 'bg-red-500/5 border-red-500/20 text-red-400 hover:bg-red-500/10' : 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100'">
             Đăng xuất
           </button>
+        </div>
+      </div>
+
+      <!-- Prize Pool Configuration -->
+      <div class="rounded-[2rem] border overflow-hidden p-8 transition-all duration-300"
+        :class="isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-100 shadow-sm'">
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <Settings class="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <h2 class="text-xl font-bold tracking-tight" :class="isDark ? 'text-white' : 'text-slate-900'">Quản lý kho giải thưởng</h2>
+              <p class="text-sm opacity-60">Thiết lập nhiều đợt hoặc loại giải thưởng</p>
+            </div>
+          </div>
+          <button @click="openPrizeModal()" 
+            class="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all active:scale-95">
+            <Trophy class="w-4 h-4" /> Thêm giải mới
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-[10px] font-bold uppercase tracking-widest opacity-40 border-b" :class="isDark ? 'border-slate-800' : 'border-slate-200'">
+                <th class="pb-4 px-2">Cấu hình</th>
+                <th class="pb-4 px-2">Số người tối đa</th>
+                <th class="pb-4 px-2">Vé mỗi người</th>
+                <th class="pb-4 px-2">Đã trúng</th>
+                <th class="pb-4 px-2 text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y" :class="isDark ? 'divide-slate-800' : 'divide-slate-100'">
+              <tr v-for="(prize, index) in prizeConfigs" :key="prize.id" class="group">
+                <td class="py-4 px-2">
+                  <span class="font-bold whitespace-nowrap" :class="isDark ? 'text-slate-200' : 'text-slate-800'">Cấu hình #{{ index + 1 }}</span>
+                </td>
+                <td class="py-4 px-2 font-mono">{{ prize.maxWinners }}</td>
+                <td class="py-4 px-2 font-mono">{{ prize.ticketsPerWinner }}</td>
+                <td class="py-4 px-2">
+                  <span class="px-2 py-1 rounded-md text-[11px] font-bold"
+                    :class="prize.currentWinners >= prize.maxWinners ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'">
+                    {{ prize.currentWinners }} / {{ prize.maxWinners }}
+                  </span>
+                </td>
+                <td class="py-4 px-2 text-right space-x-2">
+                  <button @click="openPrizeModal(prize)" class="p-2 rounded-lg hover:bg-amber-500/10 text-amber-500 transition-colors">
+                    <Settings class="w-4 h-4" />
+                  </button>
+                  <button @click="deletePrize(prize.id)" class="p-2 rounded-lg hover:bg-red-500/10 text-red-500 transition-colors">
+                    <Ban class="w-4 h-4" />
+                  </button>
+                </td>
+              </tr>
+              <tr v-if="prizeConfigs.length === 0">
+                <td colspan="4" class="py-12 text-center opacity-30 italic text-sm">Chưa có cấu hình giải thưởng nào</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Add/Edit Prize Modal -->
+      <div v-if="showPrizeModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div @click="showPrizeModal = false" class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-md rounded-[2rem] border p-8 shadow-2xl transition-all"
+          :class="isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-100'">
+          
+          <h3 class="text-xl font-bold mb-6 flex items-center gap-3">
+            <Trophy class="w-6 h-6 text-amber-500" />
+            {{ editingPrize ? 'Cập nhật giải thưởng' : 'Thêm giải thưởng mới' }}
+          </h3>
+
+          <div class="space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label class="text-xs font-bold uppercase tracking-widest opacity-50 px-1">Số người tối đa</label>
+                <input v-model.number="prizeForm.maxWinners" type="number" 
+                  class="w-full border rounded-2xl py-3.5 px-5 transition-all outline-none font-mono font-bold"
+                  :class="isDark ? 'bg-slate-950 border-slate-800 focus:border-amber-500 text-white' : 'bg-slate-50 border-slate-200 focus:border-amber-600'" />
+              </div>
+              <div class="space-y-2">
+                <label class="text-xs font-bold uppercase tracking-widest opacity-50 px-1">Vé/Người</label>
+                <input v-model.number="prizeForm.ticketsPerWinner" type="number"
+                  class="w-full border rounded-2xl py-3.5 px-5 transition-all outline-none font-mono font-bold"
+                  :class="isDark ? 'bg-slate-950 border-slate-800 focus:border-amber-500 text-white' : 'bg-slate-50 border-slate-200 focus:border-amber-600'" />
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-10 flex gap-3">
+            <button @click="showPrizeModal = false" class="flex-1 py-3.5 rounded-2xl font-bold opacity-60 hover:opacity-100 transition-opacity">Hủy</button>
+            <button @click="savePrizeConfig" :disabled="savingPrize"
+              class="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+              <RefreshCw v-if="savingPrize" class="w-4 h-4 animate-spin" />
+              {{ editingPrize ? 'Cập nhật' : 'Xác nhận' }}
+            </button>
+          </div>
         </div>
       </div>
 

@@ -1,4 +1,5 @@
-export const API_BASE_URL = 'https://vivipp.mayogu.com/api/v1';
+// export const API_BASE_URL = 'https://vivipp.mayogu.com/api/v1';
+export const API_BASE_URL = 'http://localhost:3001/api/v1';
 
 export const API_ENDPOINTS = {
     LOGIN: `${API_BASE_URL}/users/login`,
@@ -6,4 +7,5 @@ export const API_ENDPOINTS = {
     GET_ME: `${API_BASE_URL}/users/me`,
     UPDATE_SPIN: `${API_BASE_URL}/users/update-spin`,
     GET_RESULTS: `${API_BASE_URL}/users/results`,
+    PRIZES: `${API_BASE_URL}/prizes`,
 };
