@@ -409,12 +409,18 @@ const showFireworks = () => {
             <Sparkles class="w-3 h-3 lg:w-4 lg:h-4 fill-red-950" />
           </div>
           
-          <h1 class="text-4xl sm:text-6xl lg:text-8xl font-black tracking-tighter leading-none">
-            <span class="text-white block drop-shadow-lg">KHAI XUÂN</span>
-            <span class="bg-clip-text text-transparent bg-gradient-to-b from-yellow-200 via-yellow-400 to-yellow-600 drop-shadow-2xl">NHẬN QUÀ KHỦNG</span>
+          <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tighter leading-tight w-full max-w-none mx-auto px-4 flex flex-col items-center">
+            <span class="text-white block drop-shadow-lg">Khai Xuân</span>
+            <div class="flex flex-wrap justify-center gap-[0.1em]">
+              <span v-for="(char, index) in 'Nhận quà khủng cùng Mayogu'.split('')" :key="index"
+                class="bg-clip-text text-transparent bg-gradient-to-b from-yellow-200 via-emerald-400 to-emerald-600 drop-shadow-2xl animate-wave inline-block"
+                :style="{ animationDelay: `${index * 0.05}s` }">
+                {{ char === ' ' ? '&nbsp;' : char }}
+              </span>
+            </div>
           </h1>
           
-          <p class="text-base lg:text-xl text-yellow-100/80 max-w-2xl mx-auto font-medium leading-relaxed italic px-4">
+          <p class="text-sm lg:text-lg text-yellow-100/80 max-w-2xl mx-auto font-medium leading-relaxed italic px-4 mt-4">
             "Chào mừng <span class="text-yellow-400 font-bold underline decoration-yellow-500/30 underline-offset-4">{{ userName }}</span> hái lộc đầu năm"
           </p>
         </div>
@@ -431,7 +437,7 @@ const showFireworks = () => {
               <div class="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 <ul class="space-y-3 lg:space-y-4">
                   <li v-for="(item, index) in sortedLeaderboard" :key="index" 
-                      class="flex items-center justify-between p-3 lg:p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-yellow-500/10 hover:border-yellow-500/40 transition-all cursor-default animate-in fade-in slide-in-from-right duration-500"
+                      class="flex items-center justify-between p-3 lg:p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-emerald-500/10 hover:border-emerald-500/40 transition-all cursor-default animate-in fade-in slide-in-from-right duration-500"
                       :style="{ animationDelay: `${index * 100}ms` }"
                   >
                     <div class="flex items-center gap-3">
@@ -440,7 +446,7 @@ const showFireworks = () => {
                       </div>
                       <span class="text-base font-bold text-yellow-50">{{ item.fullName }}</span>
                     </div>
-                    <span class="text-[10px] lg:text-sm font-black text-yellow-500 bg-yellow-500/20 px-2 lg:px-3 py-1 rounded-full uppercase tracking-widest border border-yellow-500/30 shadow-sm shadow-yellow-500/10">
+                    <span class="text-[10px] lg:text-sm font-black text-emerald-400 bg-emerald-500/20 px-2 lg:px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-500/30 shadow-sm shadow-emerald-500/10">
                       {{ item.spinResult || 'Đang chờ...' }}
                     </span>
                   </li>
@@ -455,16 +461,16 @@ const showFireworks = () => {
               <button 
                 @click="spin"
                 :disabled="isSpinning || spinsLeft <= 0"
-                class="group relative w-full flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400 text-red-950 py-4 lg:py-5 rounded-2xl font-black text-xl lg:text-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[0_10px_40px_rgba(234,179,8,0.3)] hover:shadow-[0_15px_60px_rgba(234,179,8,0.5)]"
+                class="group relative w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-400 via-lime-500 to-emerald-400 text-white py-4 lg:py-5 rounded-2xl font-black text-xl lg:text-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[0_10px_40px_rgba(16,185,129,0.3)] hover:shadow-[0_15px_60px_rgba(16,185,129,0.5)]"
               >
-                <Play class="w-6 h-6 lg:w-7 lg:h-7 fill-red-900" />
+                <Play class="w-6 h-6 lg:w-7 lg:h-7 fill-white font-bold" />
                 <span v-if="isSpinning">ĐANG HÁI LỘC...</span>
                 <span v-else-if="spinsLeft > 0">QUAY NGAY</span>
                 <span v-else>BẠN ĐÃ HẾT LƯỢT QUAY</span>
-                <div class="absolute -inset-1 bg-yellow-400/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="absolute -inset-1 bg-emerald-400/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </button>
               
-              <p v-if="winMessage" class="text-center text-xl lg:text-2xl font-black text-yellow-400 animate-bounce py-2 lg:py-4 drop-shadow-lg">
+              <p v-if="winMessage" class="text-center text-xl lg:text-2xl font-black text-emerald-400 animate-bounce py-2 lg:py-4 drop-shadow-lg">
                 🎊 {{ winMessage }} 🎊
               </p>
             </div>
@@ -473,10 +479,10 @@ const showFireworks = () => {
           <!-- Right Side: The Wheel (Order 1 on mobile, 2 on desktop) -->
           <div class="relative flex items-center justify-center order-1 lg:order-2 sm:scale-95 lg:scale-100 my-8 lg:my-0">
             <!-- Decorative Background Elements -->
-            <div class="absolute w-[320px] lg:w-[500px] h-[320px] lg:h-[500px] bg-red-600/30 blur-[60px] lg:blur-[100px] rounded-full animate-pulse"></div>
+            <div class="absolute w-[320px] lg:w-[500px] h-[320px] lg:h-[500px] bg-emerald-600/20 blur-[60px] lg:blur-[100px] rounded-full animate-pulse"></div>
             
             <!-- Lucky Wheel Frame -->
-            <div class="relative p-2 sm:p-4 rounded-full bg-gradient-to-b from-yellow-300 via-yellow-600 to-yellow-800 shadow-[0_0_80px_rgba(234,179,8,0.2)] lg:shadow-[0_0_120px_rgba(234,179,8,0.4)]">
+            <div class="relative p-2 sm:p-4 rounded-full bg-gradient-to-b from-emerald-300 via-emerald-600 to-emerald-900 shadow-[0_0_80px_rgba(16,185,129,0.2)] lg:shadow-[0_0_120px_rgba(16,185,129,0.4)]">
               <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_40%,_black_100%)] opacity-30 rounded-full"></div>
               
               <!-- The Actual Wheel -->
@@ -489,7 +495,7 @@ const showFireworks = () => {
                     class="absolute top-0 right-0 w-1/2 h-1/2 origin-bottom-left"
                     :style="{ 
                       transform: `rotate(${i * (360 / rewards.length)}deg) skewY(-${90 - (360 / rewards.length)}deg)`,
-                      backgroundColor: i % 2 === 0 ? '#b91c1c' : '#dc2626'
+                      backgroundColor: i % 2 === 0 ? '#b91c1c' : '#059669'
                     }">
                 </div>
 
@@ -554,6 +560,15 @@ const showFireworks = () => {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(234, 179, 8, 0.5);
+}
+
+.animate-wave {
+  animation: wave 1.5s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 @keyframes firework {

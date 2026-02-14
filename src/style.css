@@ -9,8 +9,7 @@ html {
   padding: 0;
   height: 100%;
   overflow-x: hidden;
-  background-color: #3d0000;
-  /* Màu nền tết */
+  background-color: #2d0000;
 }
 
 body {
@@ -18,13 +17,12 @@ body {
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  /* Đưa hẳn background gradient ra body để phủ kín màn hình */
-  background: radial-gradient(circle at center, #9e0000 0%, #3d0000 100%);
+  /* Kết hợp tông đỏ Tết và hiệu ứng hắt xanh từ logo để tạo sự hài hòa */
+  background: radial-gradient(circle at top center, #9e0000 0%, #3d0000 70%, #064e3b 120%);
   background-attachment: fixed;
   color: white;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Chỉ cho phép thanh cuộn này tồn tại */
 }
 
 #app {
