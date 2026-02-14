@@ -527,9 +527,25 @@ const showFireworks = () => {
 
               <!-- Outer Frame Lights -->
               <div v-for="i in 24" :key="'light-'+i"
-                  class="absolute w-2 h-2 rounded-full z-10 shadow-[0_0_8px_white]"
+                  class="absolute top-1/2 left-1/2 w-2 h-2 rounded-full z-10 shadow-[0_0_8px_white] -translate-x-1/2 -translate-y-1/2 sm:hidden"
                   :class="i % 2 === 0 ? 'bg-yellow-200 animate-pulse' : 'bg-white'"
-                  :style="{ transform: `rotate(${i * 15}deg) translateY(-210px)` }">
+                  :style="{ 
+                    transform: `rotate(${i * 15}deg) translateY(-168px)` 
+                  }">
+              </div>
+              <div v-for="i in 24" :key="'light-sm-'+i"
+                  class="absolute top-1/2 left-1/2 w-2 h-2 rounded-full z-10 shadow-[0_0_8px_white] -translate-x-1/2 -translate-y-1/2 hidden sm:block lg:hidden"
+                  :class="i % 2 === 0 ? 'bg-yellow-200 animate-pulse' : 'bg-white'"
+                  :style="{ 
+                    transform: `rotate(${i * 15}deg) translateY(-200px)` 
+                  }">
+              </div>
+              <div v-for="i in 24" :key="'light-lg-'+i"
+                  class="absolute top-1/2 left-1/2 w-2 h-2 rounded-full z-10 shadow-[0_0_8px_white] -translate-x-1/2 -translate-y-1/2 hidden lg:block"
+                  :class="i % 2 === 0 ? 'bg-yellow-200 animate-pulse' : 'bg-white'"
+                  :style="{ 
+                    transform: `rotate(${i * 15}deg) translateY(-235px)` 
+                  }">
               </div>
             </div>
           </div>
