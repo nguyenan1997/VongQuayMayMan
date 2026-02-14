@@ -19,8 +19,6 @@ const userToken = ref('')
 const spinCount = ref(0)
 const hasStarted = ref(false)
 const spinsLeft = ref(0)
-const MAX_SPINS = 1
-const lastSpinDate = ref('')
 const leaderboard = ref([])
 const isAdmin = ref(false)
 const isAdminView = ref(false)
@@ -137,7 +135,8 @@ const fetchPrizes = async () => {
     })
     const result = await response.json()
     if (result.success && result.data) {
-      prizesList.value = result.data.filter(p => p.isActive)
+      // Chỉ lấy các giải thưởng CÒN XUẤT (currentWinners < maxWinners)
+      prizesList.value = result.data.filter(p => p.currentWinners < p.maxWinners)
       
       if (prizesList.value.length > 0) {
         // Tạo danh sách rewards từ prize configs
