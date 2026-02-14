@@ -10,6 +10,11 @@ import textLogo from './assets/img_logo.png'
 onMounted(() => {
   checkAuth()
   
+  // Khởi tạo pháo hoa nền ở 2 bên
+  setTimeout(() => {
+    showFireworks()
+  }, 1000)
+
   // Tự động cập nhật dữ liệu mỗi 10 giây để đảm bảo realtime
   const refreshInterval = setInterval(() => {
     if (hasStarted.value && !isAdminView.value) {
@@ -264,14 +269,26 @@ const spin = async () => {
 
 
 // Firework Logic
+let fireworksActive = false
 const showFireworks = () => {
+  // Intensity can be increased here if needed, 
+  // but for now we'll make it continuous on the sides as requested.
+  if (fireworksActive) return
+  fireworksActive = true
+  
   const canvas = document.getElementById('fireworks-canvas')
+  if (!canvas) return
   const ctx = canvas.getContext('2d')
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
+  
+  const resizeCanvas = () => {
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+  }
+  window.addEventListener('resize', resizeCanvas)
+  resizeCanvas()
 
   let particles = []
-  const colors = ['#ff0000', '#ffd700', '#ff4500', '#ffffff', '#ff6347', '#ffce00']
+  const colors = ['#ff0000', '#ffd700', '#ff4500', '#ffffff', '#ff6347', '#ffce00', '#10b981']
 
   class Particle {
     constructor(x, y, color) {
@@ -279,21 +296,21 @@ const showFireworks = () => {
       this.y = y
       this.color = color
       this.velocity = {
-        x: (Math.random() - 0.5) * 12,
-        y: (Math.random() - 0.5) * 12
+        x: (Math.random() - 0.5) * 8,
+        y: (Math.random() - 0.5) * 8
       }
       this.alpha = 1
-      this.friction = 0.96
-      this.gravity = 0.15
+      this.friction = 0.95
+      this.gravity = 0.12
     }
 
     draw() {
       ctx.save()
       ctx.globalAlpha = this.alpha
       ctx.beginPath()
-      ctx.arc(this.x, this.y, 3, 0, Math.PI * 2)
+      ctx.arc(this.x, this.y, 2.5, 0, Math.PI * 2)
       ctx.fillStyle = this.color
-      ctx.shadowBlur = 10
+      ctx.shadowBlur = 15
       ctx.shadowColor = this.color
       ctx.fill()
       ctx.restore()
@@ -305,18 +322,19 @@ const showFireworks = () => {
       this.velocity.y += this.gravity
       this.x += this.velocity.x
       this.y += this.velocity.y
-      this.alpha -= 0.012
+      this.alpha -= 0.01
     }
   }
 
   const createFirework = (x, y) => {
-    for (let i = 0; i < 80; i++) {
+    const pCount = 60
+    for (let i = 0; i < pCount; i++) {
       particles.push(new Particle(x, y, colors[Math.floor(Math.random() * colors.length)]))
     }
   }
 
   const animate = () => {
-    const requestID = requestAnimationFrame(animate)
+    requestAnimationFrame(animate)
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     particles.forEach((particle, index) => {
@@ -324,34 +342,30 @@ const showFireworks = () => {
         particle.update()
         particle.draw()
       } else {
-        setTimeout(() => {
-          particles.splice(index, 1)
-        }, 0)
+        particles.splice(index, 1)
       }
     })
-
-    // Tự động dừng sau 6 giây để tiết kiệm tài nguyên
   }
 
-  // Khởi chạy vòng lặp animation
   animate()
 
-  // Bắn pháo hoa liên tục trong 3 giây
-  let count = 0
-  const interval = setInterval(() => {
-    createFirework(
-      Math.random() * canvas.width,
-      Math.random() * canvas.height * 0.5
-    )
-    count++
-    if (count > 12) clearInterval(interval)
-  }, 400)
-
-  // Dọn dẹp sau 8 giây
-  setTimeout(() => {
-    particles = []
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-  }, 8000)
+  // Bắn pháo hoa liên tục ở hai bên (Left: 10-20%, Right: 80-90%)
+  setInterval(() => {
+    if (!isAdminView.value) {
+      // Left side
+      createFirework(
+        Math.random() * (canvas.width * 0.2), 
+        Math.random() * (canvas.height * 0.5)
+      )
+      // Right side
+      setTimeout(() => {
+        createFirework(
+          canvas.width * 0.8 + Math.random() * (canvas.width * 0.2),
+          Math.random() * (canvas.height * 0.5)
+        )
+      }, 300)
+    }
+  }, 1500)
 }
 </script>
 
