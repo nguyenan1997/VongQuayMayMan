@@ -401,26 +401,26 @@ const showFireworks = () => {
       <main class="w-full px-4 sm:px-12 pb-24 flex flex-col items-center pt-0 mt-0">
         <!-- Header Banner Style -->
         <div class="text-center space-y-2 mb-6 lg:mb-10 animate-in fade-in slide-in-from-top duration-1000 flex-shrink-0">
-          <div class="inline-flex items-center gap-2 px-3 lg:px-4 py-1.5 rounded-full bg-yellow-400 text-red-900 text-[10px] lg:text-xs font-black uppercase tracking-[0.2em] border-2 border-yellow-200">
-            <Sparkles class="w-3 h-3 lg:w-4 lg:h-4 fill-red-900" />
+          <div class="inline-flex items-center gap-2 px-3 lg:px-4 py-1.5 rounded-full bg-yellow-400 text-red-950 text-[10px] lg:text-xs font-black uppercase tracking-[0.2em] border-2 border-yellow-200 shadow-lg shadow-yellow-500/20">
+            <Sparkles class="w-3 h-3 lg:w-4 lg:h-4 fill-red-950" />
             Xuân Ất Tỵ 2025
-            <Sparkles class="w-3 h-3 lg:w-4 lg:h-4 fill-red-900" />
+            <Sparkles class="w-3 h-3 lg:w-4 lg:h-4 fill-red-950" />
           </div>
           
           <h1 class="text-4xl sm:text-6xl lg:text-8xl font-black tracking-tighter leading-none">
-            <span class="text-white block">KHAI XUÂN</span>
+            <span class="text-white block drop-shadow-lg">KHAI XUÂN</span>
             <span class="bg-clip-text text-transparent bg-gradient-to-b from-yellow-200 via-yellow-400 to-yellow-600 drop-shadow-2xl">NHẬN QUÀ KHỦNG</span>
           </h1>
           
-          <p class="text-base lg:text-xl text-yellow-100/70 max-w-2xl mx-auto font-medium leading-relaxed italic px-4">
-            "Chào mừng <span class="text-yellow-400 font-bold">{{ userName }}</span> hái lộc đầu năm"
+          <p class="text-base lg:text-xl text-yellow-100/80 max-w-2xl mx-auto font-medium leading-relaxed italic px-4">
+            "Chào mừng <span class="text-yellow-400 font-bold underline decoration-yellow-500/30 underline-offset-4">{{ userName }}</span> hái lộc đầu năm"
           </p>
         </div>
 
         <div class="grid lg:grid-cols-2 gap-10 lg:gap-32 items-center w-full px-4 lg:px-20">
           <!-- Left Side: Prizes & Info (Order 2 on mobile, 1 on desktop) -->
           <div class="space-y-6 lg:space-y-8 order-2 lg:order-1 px-2">
-            <div class="bg-red-900/40 p-6 lg:p-8 rounded-3xl border-2 border-yellow-500/20 backdrop-blur-sm relative overflow-hidden group">
+            <div class="bg-red-900/40 p-6 lg:p-8 rounded-3xl border-2 border-yellow-500/30 backdrop-blur-md relative overflow-hidden group shadow-2xl">
               <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-500/10 blur-3xl rounded-full"></div>
               <h3 class="text-xl lg:text-2xl font-black text-yellow-500 mb-4 lg:mb-6 flex items-center gap-3">
                 <Trophy class="w-5 h-5 lg:w-6 lg:h-6" />
@@ -429,16 +429,16 @@ const showFireworks = () => {
               <div class="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 <ul class="space-y-3 lg:space-y-4">
                   <li v-for="(item, index) in sortedLeaderboard" :key="index" 
-                      class="flex items-center justify-between p-3 lg:p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-yellow-500/10 hover:border-yellow-500/30 transition-all cursor-default animate-in fade-in slide-in-from-right duration-500"
+                      class="flex items-center justify-between p-3 lg:p-4 bg-white/5 rounded-xl border border-white/10 hover:bg-yellow-500/10 hover:border-yellow-500/40 transition-all cursor-default animate-in fade-in slide-in-from-right duration-500"
                       :style="{ animationDelay: `${index * 100}ms` }"
                   >
                     <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-500 font-bold text-sm border border-yellow-500/30">
+                      <div class="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400 font-bold text-sm border border-yellow-500/30">
                         {{ index + 1 }}
                       </div>
-                      <span class="text-base font-bold text-yellow-100">{{ item.fullName }}</span>
+                      <span class="text-base font-bold text-yellow-50">{{ item.fullName }}</span>
                     </div>
-                    <span class="text-[10px] lg:text-sm font-black text-yellow-500 bg-yellow-500/10 px-2 lg:px-3 py-1 rounded-full uppercase tracking-widest border border-yellow-500/20 shadow-sm shadow-yellow-500/10">
+                    <span class="text-[10px] lg:text-sm font-black text-yellow-500 bg-yellow-500/20 px-2 lg:px-3 py-1 rounded-full uppercase tracking-widest border border-yellow-500/30 shadow-sm shadow-yellow-500/10">
                       {{ item.spinResult || 'Đang chờ...' }}
                     </span>
                   </li>
@@ -450,40 +450,36 @@ const showFireworks = () => {
             </div>
 
             <div class="flex flex-col gap-4">
-
-
-            <button 
-              @click="spin"
-              :disabled="isSpinning || spinsLeft <= 0"
-              class="group relative w-full flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400 text-red-950 py-4 lg:py-5 rounded-2xl font-black text-xl lg:text-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:shadow-[0_0_60px_rgba(234,179,8,0.5)]"
-            >
-              <Play class="w-6 h-6 lg:w-7 lg:h-7 fill-red-900" />
-              <span v-if="isSpinning">ĐANG HÁI LỘC...</span>
-              <span v-else-if="spinsLeft > 0">QUAY NGAY</span>
-              <span v-else>BẠN ĐÃ HẾT LƯỢT QUAY</span>
-              <div class="absolute -inset-1 bg-yellow-400/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </button>
-            
-            <p v-if="winMessage" class="text-center text-xl lg:text-2xl font-black text-yellow-400 animate-bounce py-2 lg:py-4 drop-shadow-lg">
-              🎊 {{ winMessage }} 🎊
-            </p>
-
-
-          </div>
+              <button 
+                @click="spin"
+                :disabled="isSpinning || spinsLeft <= 0"
+                class="group relative w-full flex items-center justify-center gap-3 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-400 text-red-950 py-4 lg:py-5 rounded-2xl font-black text-xl lg:text-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed shadow-[0_10px_40px_rgba(234,179,8,0.3)] hover:shadow-[0_15px_60px_rgba(234,179,8,0.5)]"
+              >
+                <Play class="w-6 h-6 lg:w-7 lg:h-7 fill-red-900" />
+                <span v-if="isSpinning">ĐANG HÁI LỘC...</span>
+                <span v-else-if="spinsLeft > 0">QUAY NGAY</span>
+                <span v-else>BẠN ĐÃ HẾT LƯỢT QUAY</span>
+                <div class="absolute -inset-1 bg-yellow-400/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </button>
+              
+              <p v-if="winMessage" class="text-center text-xl lg:text-2xl font-black text-yellow-400 animate-bounce py-2 lg:py-4 drop-shadow-lg">
+                🎊 {{ winMessage }} 🎊
+              </p>
+            </div>
           </div>
 
           <!-- Right Side: The Wheel (Order 1 on mobile, 2 on desktop) -->
           <div class="relative flex items-center justify-center order-1 lg:order-2 sm:scale-95 lg:scale-100 my-8 lg:my-0">
             <!-- Decorative Background Elements -->
-            <div class="absolute w-[320px] lg:w-[500px] h-[320px] lg:h-[500px] bg-red-600/20 blur-[60px] lg:blur-[100px] rounded-full"></div>
+            <div class="absolute w-[320px] lg:w-[500px] h-[320px] lg:h-[500px] bg-red-600/30 blur-[60px] lg:blur-[100px] rounded-full animate-pulse"></div>
             
             <!-- Lucky Wheel Frame -->
-            <div class="relative p-2 sm:p-4 rounded-full bg-gradient-to-b from-yellow-300 via-yellow-600 to-yellow-800 shadow-[0_0_50px_rgba(0,0,0,0.5)] lg:shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+            <div class="relative p-2 sm:p-4 rounded-full bg-gradient-to-b from-yellow-300 via-yellow-600 to-yellow-800 shadow-[0_0_80px_rgba(234,179,8,0.2)] lg:shadow-[0_0_120px_rgba(234,179,8,0.4)]">
               <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_40%,_black_100%)] opacity-30 rounded-full"></div>
               
               <!-- The Actual Wheel -->
               <div 
-                class="relative w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] lg:w-[450px] lg:h-[450px] rounded-full border-4 border-yellow-100/50 transition-transform duration-[3000ms] ease-[cubic-bezier(0.25, 0.1, 0.25, 1)] overflow-hidden shadow-inner flex items-center justify-center"
+                class="relative w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] lg:w-[450px] lg:h-[450px] rounded-full border-4 border-yellow-100/50 transition-transform duration-[4000ms] ease-[cubic-bezier(0.15, 0, 0.15, 1)] overflow-hidden shadow-inner flex items-center justify-center"
                 :style="{ transform: `rotate(${currentRotation}deg)` }"
               >
                 <!-- Colored Segments -->
@@ -491,7 +487,7 @@ const showFireworks = () => {
                     class="absolute top-0 right-0 w-1/2 h-1/2 origin-bottom-left"
                     :style="{ 
                       transform: `rotate(${i * (360 / rewards.length)}deg) skewY(-${90 - (360 / rewards.length)}deg)`,
-                      backgroundColor: i % 2 === 0 ? '#cc0000' : '#e60000'
+                      backgroundColor: i % 2 === 0 ? '#b91c1c' : '#dc2626'
                     }">
                 </div>
 
@@ -501,7 +497,7 @@ const showFireworks = () => {
                     :style="{ transform: `rotate(${i * (360 / rewards.length) + (180 / rewards.length)}deg)` }">
                   <div class="flex flex-col items-center gap-1">
                     <Star class="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    <span class="text-xl font-black text-yellow-400 drop-shadow-md whitespace-nowrap uppercase tracking-tighter">
+                    <span class="text-xl font-black text-yellow-300 drop-shadow-md whitespace-nowrap uppercase tracking-tighter">
                       {{ reward }}
                     </span>
                   </div>
@@ -523,7 +519,7 @@ const showFireworks = () => {
 
               <!-- Outer Frame Lights -->
               <div v-for="i in 24" :key="'light-'+i"
-                  class="absolute w-2 h-2 rounded-full z-10 shadow-[0_0_5px_white]"
+                  class="absolute w-2 h-2 rounded-full z-10 shadow-[0_0_8px_white]"
                   :class="i % 2 === 0 ? 'bg-yellow-200 animate-pulse' : 'bg-white'"
                   :style="{ transform: `rotate(${i * 15}deg) translateY(-210px)` }">
               </div>
