@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from 'vue'
-import { Coins, User, Phone, Lock, ArrowRight, UserPlus, LogIn } from 'lucide-vue-next'
+import { User, Phone, Lock, ArrowRight, UserPlus, LogIn } from 'lucide-vue-next'
 import { API_ENDPOINTS } from '../configs/api'
+import logo from '../assets/logo.png'
 
 const emit = defineEmits(['auth-success'])
 
@@ -85,8 +86,8 @@ const handleRegister = async () => {
       <!-- Logo Section -->
       <div class="text-center space-y-4">
         <div class="flex justify-center">
-          <div class="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-2xl shadow-yellow-500/50 border-4 border-red-800 animate-bounce">
-            <Coins class="w-10 h-10 text-red-900" />
+          <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl shadow-yellow-500/50 border-4 border-red-800 animate-bounce overflow-hidden">
+            <img :src="logo" alt="Logo" class="w-full h-full object-cover rounded-full" />
           </div>
         </div>
         <div class="space-y-1">

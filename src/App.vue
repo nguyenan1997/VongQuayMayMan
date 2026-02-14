@@ -1,9 +1,11 @@
 <script setup>
-import { HelpCircle, Trophy, Play, Star, Sparkles, Coins } from 'lucide-vue-next'
+import { HelpCircle, Trophy, Play, Star, Sparkles } from 'lucide-vue-next'
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import Auth from './components/Auth.vue'
 import Admin from './components/Admin.vue'
 import { API_ENDPOINTS } from './configs/api'
+import logo from './assets/logo.png'
+import textLogo from './assets/img_logo.png'
 
 onMounted(() => {
   checkAuth()
@@ -368,11 +370,11 @@ const showFireworks = () => {
       <!-- Navigation -->
       <nav class="flex items-center justify-between px-4 sm:px-12 py-6 backdrop-blur-md bg-red-950/10 sticky top-0 z-50">
         <div class="flex items-center gap-3 group cursor-pointer">
-          <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/30 group-hover:scale-110 transition-transform border-2 border-red-800">
-            <Coins class="w-7 h-7 text-red-900" />
+          <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform border-2 border-red-800 overflow-hidden">
+            <img :src="logo" alt="Logo" class="w-full h-full object-cover rounded-full" />
           </div>
-          <div>
-            <span class="text-2xl font-black tracking-tighter block leading-none text-yellow-500 shadow-yellow-900 drop-shadow-sm uppercase">Tết May Mắn</span>
+          <div class="h-8 ml-1">
+            <img :src="textLogo" alt="MAYogu" class="h-full object-contain filter drop-shadow-sm" />
           </div>
         </div>
         
